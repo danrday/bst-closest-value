@@ -11,7 +11,8 @@ defmodule BstClosestValueWeb.PageLive do
     {:ok, tree} = BST.new([4, 5, 6, -7, -3]).root |> Jason.encode()
     # tree = BST.new([4, 5, 6, -7, -3]).root
     send(self(), :initialize_tree)
-    {:ok, assign(socket, query: "", tree: tree, value: nil, results: %{})}
+    send(self(), :current_value)
+    {:ok, assign(socket, query: "", tree: tree, value: -7, results: %{})}
   end
 
   def handle_info(
@@ -19,6 +20,13 @@ defmodule BstClosestValueWeb.PageLive do
         %{assigns: %{tree: tree}} = socket
       ) do
     {:noreply, push_event(socket, "scores", %{tree: tree})}
+  end
+
+  def handle_info(
+        :current_value,
+        %{assigns: %{value: value}} = socket
+      ) do
+    {:noreply, push_event(socket, "current_value", %{value: value})}
   end
 
   @impl true

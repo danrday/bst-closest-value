@@ -2,33 +2,17 @@ import * as d3 from "d3";
 
 const Canvas= {
   mounted(params, x, y){
+    this.handleEvent("current_value", (params) => {
+      d3.selectAll('circle.node')
+              .attr('r', 5)
+              .style("fill", function(d){
+                  return params.value === d.data.data ? 'yellow' : 'blue';
+              })
+    })
     this.handleEvent("scores", (params) => {
       let tree = JSON.parse(params.tree)
-      console.log("tree:", tree)
+      // console.log("tree:", tree)
       let treeData = tree
-      // var treeData = {
-      //     "value": 25,
-      //     "children": [{
-      //             "value": 10,
-      //             "parent": 25,
-      //             "children": [{
-      //                     "value": 7,
-      //                     "parent": 10,
-      //                     "children": [{
-      //                             "value": 7,
-      //                             "parent": 10,
-      //                         },
-      //                         { "value": 15,
-      //                           "parent": 10 }]
-      //                 },
-      //                 { "value": 15,
-      //                   "parent": 10 }]
-      //                },
-      //                { "value": 50,
-      //                  "parent": 25
-      //                }]
-      // };
-
 
       // Set dimensions and margins for diagram
       var margin = {top: 80, bottom: 80},

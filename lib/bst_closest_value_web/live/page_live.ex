@@ -11,9 +11,9 @@ defmodule BstClosestValueWeb.PageLive do
     {:ok, tree} = BST.new([4, 5, 6, -7, -3]).root |> Jason.encode()
     # tree = BST.new([4, 5, 6, -7, -3]).root
     send(self(), :initialize_tree)
-    # send(self(), :current_value)
-    findClosestValueInBst(socket, BST.new([4, 5, 6, -7, -3]).root, 6)
-    {:ok, assign(socket, query: "", tree: tree, value: -3, results: %{})}
+    list = findClosestValueInBst(BST.new([4, 5, 6, -7, -3]).root, -4)
+    send(self(), :current_value)
+    {:ok, assign(socket, query: "", tree: tree, value: -3, list: list, results: %{})}
   end
 
   def handle_info(
@@ -25,19 +25,19 @@ defmodule BstClosestValueWeb.PageLive do
 
   def handle_info(
         :current_value,
-        %{assigns: %{value: value}} = socket
+        %{assigns: %{list: list}} = socket
       ) do
-    {:noreply, push_event(socket, "current_value", %{value: value})}
+    {:noreply, push_event(socket, "current_value", %{list: list})}
   end
 
   @impl true
   def handle_event("search_for_closest_value", _params, socket) do
-    findClosestValueInBst(socket, BST.new([4, 5, 6, -7, -3]).root, 6)
+    # findClosestValueInBst(BST.new([4, 5, 6, -7, -3]).root, 6)
     {:noreply, socket}
   end
 
-  def findClosestValueInBst(socket, tree, target) do
-    findClosestValueInBstHelper(socket, tree, target, tree.data)
+  def findClosestValueInBst(tree, target) do
+    findClosestValueInBstHelper(tree, target, tree.data, [])
   end
 
   def get_closest(target, closest, current) do
@@ -48,25 +48,23 @@ defmodule BstClosestValueWeb.PageLive do
     end
   end
 
-  def findClosestValueInBstHelper(socket, tree, target, closest) do
-    Process.sleep(2000)
+  def findClosestValueInBstHelper(tree, target, closest, history) do
+    current_value = if tree == nil, do: 0, else: tree.data
 
-    new_closest = get_closest(target, closest, tree.data)
-    send(self(), :current_value)
-    IO.puts(new_closest)
+    new_closest = get_closest(target, closest, current_value)
 
     cond do
       tree == nil ->
-        closest
+        history
 
       target < tree.data ->
-        findClosestValueInBstHelper(socket, tree.left, target, new_closest)
+        findClosestValueInBstHelper(tree.left, target, new_closest, history ++ [new_closest])
 
       target > tree.data ->
-        findClosestValueInBstHelper(socket, tree.right, target, new_closest)
+        findClosestValueInBstHelper(tree.right, target, new_closest, history ++ [new_closest])
 
       true ->
-        closest
+        history ++ [new_closest]
     end
   end
 end

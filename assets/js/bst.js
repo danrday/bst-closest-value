@@ -2,7 +2,10 @@ import * as d3 from "d3";
 
 const Canvas= {
   mounted(params, x, y){
+    // this.pushEvent("search_for_closest_value", 7)
+
     this.handleEvent("current_value", (params) => {
+      console.log("CURR VLAUE PARAMS", params)
       d3.selectAll('circle.node')
               .attr('r', 5)
               .style("fill", function(d){

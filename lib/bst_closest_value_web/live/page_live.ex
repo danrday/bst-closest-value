@@ -11,8 +11,9 @@ defmodule BstClosestValueWeb.PageLive do
     {:ok, tree} = BST.new([4, 5, 6, -7, -3]).root |> Jason.encode()
     # tree = BST.new([4, 5, 6, -7, -3]).root
     send(self(), :initialize_tree)
-    send(self(), :current_value)
-    {:ok, assign(socket, query: "", tree: tree, value: -7, results: %{})}
+    # send(self(), :current_value)
+    findClosestValueInBst(socket, BST.new([4, 5, 6, -7, -3]).root, 6)
+    {:ok, assign(socket, query: "", tree: tree, value: -3, results: %{})}
   end
 
   def handle_info(
@@ -30,33 +31,42 @@ defmodule BstClosestValueWeb.PageLive do
   end
 
   @impl true
-  def handle_event("suggest", %{"q" => query}, socket) do
-    {:noreply, assign(socket, results: search(query), query: query)}
+  def handle_event("search_for_closest_value", _params, socket) do
+    findClosestValueInBst(socket, BST.new([4, 5, 6, -7, -3]).root, 6)
+    {:noreply, socket}
   end
 
-  @impl true
-  def handle_event("search", %{"q" => query}, socket) do
-    case search(query) do
-      %{^query => vsn} ->
-        {:noreply, redirect(socket, external: "https://hexdocs.pm/#{query}/#{vsn}")}
+  def findClosestValueInBst(socket, tree, target) do
+    findClosestValueInBstHelper(socket, tree, target, tree.data)
+  end
 
-      _ ->
-        {:noreply,
-         socket
-         |> put_flash(:error, "No dependencies found matching \"#{query}\"")
-         |> assign(results: %{}, query: query)}
+  def get_closest(target, closest, current) do
+    if abs(target - closest) > abs(target - current) do
+      current
+    else
+      closest
     end
   end
 
-  defp search(query) do
-    if not BstClosestValueWeb.Endpoint.config(:code_reloader) do
-      raise "action disabled when not in development"
-    end
+  def findClosestValueInBstHelper(socket, tree, target, closest) do
+    Process.sleep(2000)
 
-    for {app, desc, vsn} <- Application.started_applications(),
-        app = to_string(app),
-        String.starts_with?(app, query) and not List.starts_with?(desc, ~c"ERTS"),
-        into: %{},
-        do: {app, vsn}
+    new_closest = get_closest(target, closest, tree.data)
+    send(self(), :current_value)
+    IO.puts(new_closest)
+
+    cond do
+      tree == nil ->
+        closest
+
+      target < tree.data ->
+        findClosestValueInBstHelper(socket, tree.left, target, new_closest)
+
+      target > tree.data ->
+        findClosestValueInBstHelper(socket, tree.right, target, new_closest)
+
+      true ->
+        closest
+    end
   end
 end
